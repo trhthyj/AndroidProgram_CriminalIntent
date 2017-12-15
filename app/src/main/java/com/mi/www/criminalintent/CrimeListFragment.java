@@ -100,7 +100,8 @@ public class CrimeListFragment extends Fragment {
         public void bind(Crime crime){
             mCrime = crime;
             mTvCrimeTitle.setText(crime.getTitle());
-            mTvCrimeDate.setText(crime.getDate());
+            String date = DateFormat.format("yyyy年MM月dd日",crime.getDate()).toString();
+            mTvCrimeDate.setText(date);
             mIvResolved.setVisibility(crime.isSolved() ? View.VISIBLE : View.INVISIBLE);
             mView.setOnClickListener(this);
         }

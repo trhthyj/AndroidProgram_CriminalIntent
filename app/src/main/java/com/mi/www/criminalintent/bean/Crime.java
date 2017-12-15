@@ -12,15 +12,12 @@ import java.util.UUID;
 public class Crime {
     private UUID mId;
     private String mTitle;
-    private String mDate;
+    private Date mDate;
     private boolean mSolved;
 
     public Crime() {
         mId = UUID.randomUUID();
-        //            yyyy年MM月dd日,kk:mm-------2014年09月30日,11:23
-        //            "MMM dd, yyyy h:mmaa" -> "Nov 3, 1987 11:23am"
-        mDate = DateFormat.format("yyyy年MM月dd日",new Date()).toString();
-
+        mDate = new Date();
     }
 
     public UUID getId() {
@@ -35,11 +32,11 @@ public class Crime {
         mTitle = title;
     }
 
-    public String getDate() {
+    public Date getDate() {
         return mDate;
     }
 
-    public void setDate(String date) {
+    public void setDate(Date date) {
         mDate = date;
     }
 

@@ -1,12 +1,15 @@
 package com.mi.www.criminalintent;
 
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +21,7 @@ import android.widget.EditText;
 import com.mi.www.criminalintent.bean.Crime;
 import com.mi.www.criminalintent.bean.CrimeLab;
 
+import java.util.Date;
 import java.util.UUID;
 
 import static android.widget.CompoundButton.*;
@@ -26,8 +30,10 @@ import static android.widget.CompoundButton.*;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class CrimeFragment extends Fragment {
+public class CrimeFragment extends Fragment implements OnClickListener{
     private static final String ARG_CRIME_ID = "crime_id";
+    private static final String TAG_DIALOG_DATE = "DialogDate";
+    private static final int REQUEST_DATE = 0;
     private Crime mCrime;
     private UUID mCrimeId;
     private EditText mEtCrimeTitle;
@@ -48,24 +54,7 @@ public class CrimeFragment extends Fragment {
         mEtCrimeTitle = view.findViewById(R.id.et_crime_title);
         mBtnCrimeDate = view.findViewById(R.id.btn_crime_date);
         mCbCrimeSolved = view.findViewById(R.id.cb_crime_solved);
-        mBtnCrimeDate.setEnabled(false);
-        mEtCrimeTitle.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-
+        mBtnCrimeDate.setOnClickListener(this);
         mCbCrimeSolved.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -77,11 +66,42 @@ public class CrimeFragment extends Fragment {
         mCrime = CrimeLab.getCrimeLab(getActivity()).getCrimeById(mCrimeId);
         if(mCrime != null){
             mEtCrimeTitle.setText(mCrime.getTitle());
-            mBtnCrimeDate.setText(mCrime.getDate());
+            //            yyyy年MM月dd日,kk:mm-------2014年09月30日,11:23
+            //            "MMM dd, yyyy h:mmaa" -> "Nov 3, 1987 11:23am"
+            String date = DateFormat.format("yyyy年MM月dd日",mCrime.getDate()).toString();
+            mBtnCrimeDate.setText(date);
             mCbCrimeSolved.setChecked(mCrime.isSolved());
 
         }
         return view;
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch(view.getId()){
+            case R.id.btn_crime_date:
+                //在CrimeFragment之上弹出一个DialogFragment
+                FragmentManager manager = getFragmentManager();
+                DatePickerDialogFragment datePickerDialogFragment =DatePickerDialogFragment.newInstance(mCrime.getDate());
+                //设置DatePickerDialogFragment的目标是CrimeFragment，以便给CrimeFragment返回数据
+                datePickerDialogFragment.setTargetFragment(CrimeFragment.this,REQUEST_DATE);
+                datePickerDialogFragment.show(manager,TAG_DIALOG_DATE);
+                break;
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode != Activity.RESULT_OK){
+            return;
+        }
+        if(requestCode == REQUEST_DATE){
+            Date date = (Date) data.getSerializableExtra(DatePickerDialogFragment.EXTRA_DATE);
+            mCrime.setDate(date);
+            String dateString = DateFormat.format("yyyy年MM月dd日",mCrime.getDate()).toString();
+            mBtnCrimeDate.setText(dateString);
+        }
     }
 
 }
