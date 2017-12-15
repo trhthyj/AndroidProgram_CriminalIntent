@@ -108,8 +108,11 @@ public class CrimeListFragment extends Fragment {
         @Override
         public void onClick(View view) {
             //这种调用方法可以避免startActivityForResult尴尬
-            Intent intent = CrimeActivity.newIntent(getActivity(),mCrime.getId());
+//            Intent intent = CrimeActivity.newIntent(getActivity(),mCrime.getId());
+//            startActivity(intent);
+            Intent intent = CrimePagerActivity.newIntent(getActivity(),mCrime.getId());
             startActivity(intent);
+
         }
     }
 
