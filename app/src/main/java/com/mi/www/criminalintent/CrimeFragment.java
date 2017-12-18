@@ -39,6 +39,7 @@ public class CrimeFragment extends Fragment implements OnClickListener{
     private EditText mEtCrimeTitle;
     private Button mBtnCrimeDate;
     private CheckBox mCbCrimeSolved;
+    private Button mBtnDelete;
 
     public static CrimeFragment newInstance(UUID id){
         Bundle bundle = new Bundle();
@@ -54,7 +55,9 @@ public class CrimeFragment extends Fragment implements OnClickListener{
         mEtCrimeTitle = view.findViewById(R.id.et_crime_title);
         mBtnCrimeDate = view.findViewById(R.id.btn_crime_date);
         mCbCrimeSolved = view.findViewById(R.id.cb_crime_solved);
+        mBtnDelete = view.findViewById(R.id.btn_crime_delete);
         mBtnCrimeDate.setOnClickListener(this);
+        mBtnDelete.setOnClickListener(this);
         mCbCrimeSolved.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -63,7 +66,7 @@ public class CrimeFragment extends Fragment implements OnClickListener{
         });
 
         mCrimeId = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
-        mCrime = CrimeLab.getCrimeLab(getActivity()).getCrimeById(mCrimeId);
+        mCrime = CrimeLab.getCrimeLab(getActivity()).getCrime(mCrimeId);
         if(mCrime != null){
             mEtCrimeTitle.setText(mCrime.getTitle());
             //            yyyy年MM月dd日,kk:mm-------2014年09月30日,11:23
@@ -73,6 +76,31 @@ public class CrimeFragment extends Fragment implements OnClickListener{
             mCbCrimeSolved.setChecked(mCrime.isSolved());
 
         }
+
+        mEtCrimeTitle.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                mCrime.setTitle(charSequence.toString().trim());
+                CrimeLab.getCrimeLab(getActivity()).updateCrime(mCrime);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+        mCbCrimeSolved.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                mCrime.setSolved(b);
+                CrimeLab.getCrimeLab(getActivity()).updateCrime(mCrime);
+            }
+        });
         return view;
     }
 
@@ -87,6 +115,12 @@ public class CrimeFragment extends Fragment implements OnClickListener{
                 datePickerDialogFragment.setTargetFragment(CrimeFragment.this,REQUEST_DATE);
                 datePickerDialogFragment.show(manager,TAG_DIALOG_DATE);
                 break;
+            case R.id.btn_crime_delete:
+                CrimeLab.getCrimeLab(getActivity()).deleteCrime(mCrime);
+                getActivity().finish();
+                break;
+            default:
+                break;
         }
     }
 
@@ -99,6 +133,7 @@ public class CrimeFragment extends Fragment implements OnClickListener{
         if(requestCode == REQUEST_DATE){
             Date date = (Date) data.getSerializableExtra(DatePickerDialogFragment.EXTRA_DATE);
             mCrime.setDate(date);
+            CrimeLab.getCrimeLab(getActivity()).updateCrime(mCrime);
             String dateString = DateFormat.format("yyyy年MM月dd日",mCrime.getDate()).toString();
             mBtnCrimeDate.setText(dateString);
         }

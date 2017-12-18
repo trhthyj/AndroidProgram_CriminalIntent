@@ -111,11 +111,12 @@ public class CrimeListFragment extends Fragment {
      */
     private void updateUI() {
         mCrimeLab = CrimeLab.getCrimeLab(getActivity());
-        mCrimeList = mCrimeLab.getCrimeList();
+        mCrimeList = mCrimeLab.getCrimes();
         if(mCrimeListAdapter == null){
             mCrimeListAdapter = new CrimeListAdapter(mCrimeList);
             mRecyclerView.setAdapter(mCrimeListAdapter);
         }else{
+            mCrimeListAdapter.setCrimes(mCrimeList);
             mCrimeListAdapter.notifyDataSetChanged();
         }
         //添加crime后刷新subtitle，因为onResume里会调用updateUI，因此在此方法调用updateSubTitle
@@ -127,7 +128,7 @@ public class CrimeListFragment extends Fragment {
      */
     private void updateSubTitle() {
         CrimeLab crimeLab = CrimeLab.getCrimeLab(getActivity());
-        int crimeCount = crimeLab.getCrimeList().size();
+        int crimeCount = crimeLab.getCrimes().size();
         //复数字符串资源,此方法在中文系统环境中不起作用
         String subtitle = getResources()
                 .getQuantityString(R.plurals.subtitle_plural,crimeCount,crimeCount);
@@ -161,6 +162,10 @@ public class CrimeListFragment extends Fragment {
         @Override
         public int getItemCount() {
             return mCrimeList.size();
+        }
+
+        public void setCrimes(List<Crime> crimes){
+            this.mCrimeList = crimes;
         }
     }
 

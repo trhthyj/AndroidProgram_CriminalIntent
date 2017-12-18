@@ -8,6 +8,7 @@
     <string name="new_crime">New Crime</string>
     <string name="show_subtitle">show subtitle</string>
     <string name="hide_subtitle">hide subtitle</string>
+    <string name="delete_crime">delete</string>
 
     <!--复数字符串，此方法在中文系统环境中不起作用-->
     <plurals name="subtitle_plural">
