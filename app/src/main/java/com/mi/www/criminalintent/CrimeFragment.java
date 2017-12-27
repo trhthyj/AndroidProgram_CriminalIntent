@@ -4,14 +4,18 @@ package com.mi.www.criminalintent;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ShareCompat;
+import android.support.v4.content.FileProvider;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -23,11 +27,15 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 
 import com.mi.www.criminalintent.bean.Crime;
 import com.mi.www.criminalintent.bean.CrimeLab;
 
+import java.io.File;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import static android.widget.CompoundButton.*;
@@ -41,6 +49,7 @@ public class CrimeFragment extends Fragment implements OnClickListener{
     private static final String TAG_DIALOG_DATE = "DialogDate";
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_CONTACT = 1;
+    private static final int REQUEST_PHOTO = 2;
     private Crime mCrime;
     private UUID mCrimeId;
     private EditText mEtCrimeTitle;
@@ -49,6 +58,10 @@ public class CrimeFragment extends Fragment implements OnClickListener{
     private Button mBtnDelete;
     private Button mBtnChooseSuspect;
     private Button mBtnReportCrime;
+    private Button mBtnCapture;
+    private ImageView mIvCapture;
+    private File mPhotoFile;
+    private Intent mCaptureIntent;
 
     public static CrimeFragment newInstance(UUID id){
         Bundle bundle = new Bundle();
@@ -67,10 +80,14 @@ public class CrimeFragment extends Fragment implements OnClickListener{
         mBtnChooseSuspect = view.findViewById(R.id.btn_choose_suspect);
         mBtnReportCrime = view.findViewById(R.id.btn_report_crime);
         mBtnDelete = view.findViewById(R.id.btn_crime_delete);
+        mBtnCapture = view.findViewById(R.id.btn_open_camera);
+        mIvCapture = view.findViewById(R.id.iv_capture);
         mBtnCrimeDate.setOnClickListener(this);
         mBtnChooseSuspect.setOnClickListener(this);
         mBtnReportCrime.setOnClickListener(this);
         mBtnDelete.setOnClickListener(this);
+        mBtnCapture.setOnClickListener(this);
+
         mCbCrimeSolved.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -90,8 +107,12 @@ public class CrimeFragment extends Fragment implements OnClickListener{
             if(!TextUtils.isEmpty(mCrime.getSuspect())){
                 mBtnChooseSuspect.setText(mCrime.getSuspect());
             }
+            mPhotoFile = CrimeLab.getCrimeLab(getActivity()).getPhotoFile(mCrime);
+            mCaptureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            boolean canTakePhoto = mPhotoFile != null && mCaptureIntent.resolveActivity(getActivity().getPackageManager()) != null;
+            mBtnCapture.setEnabled(canTakePhoto);
         }
-
+        updatePhotoView();
         mEtCrimeTitle.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -140,8 +161,40 @@ public class CrimeFragment extends Fragment implements OnClickListener{
             case R.id.btn_report_crime:
                 sendReport();
                 break;
+            case R.id.btn_open_camera:
+                takePhoto();
+                break;
             default:
                 break;
+        }
+    }
+
+    /**
+     * 拍照
+     */
+    private void takePhoto() {
+        Uri uri = FileProvider.getUriForFile(getActivity(),
+                "com.mi.www.criminalintent.fileprovider",
+                mPhotoFile);
+        mCaptureIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        List<ResolveInfo> cameraActivities = getActivity().getPackageManager()
+                .queryIntentActivities(mCaptureIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        for(ResolveInfo activity : cameraActivities){
+            getActivity().grantUriPermission(activity.activityInfo.packageName,
+                    uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        }
+        startActivityForResult(mCaptureIntent, REQUEST_PHOTO);
+    }
+
+    /**
+     * 更新imageview显示
+     */
+    private void updatePhotoView(){
+        if(mPhotoFile == null || !mPhotoFile.exists()){
+            mIvCapture.setImageDrawable(null);
+        }else{
+            Bitmap bitmap = PictureUtils.getScaleBitmap(mPhotoFile.getPath(), getActivity());
+            mIvCapture.setImageBitmap(bitmap);
         }
     }
 
@@ -175,6 +228,12 @@ public class CrimeFragment extends Fragment implements OnClickListener{
             }finally {
                 cursor.close();
             }
+        }else if(requestCode == REQUEST_PHOTO){
+            Uri uri = FileProvider.getUriForFile(getActivity(),
+                    "com.mi.www.criminalintent.fileprovider",
+                    mPhotoFile);
+            getActivity().revokeUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            updatePhotoView();
         }
     }
 

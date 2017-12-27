@@ -10,6 +10,7 @@ import com.mi.www.criminalintent.database.CrimeCursorWrapper;
 import com.mi.www.criminalintent.bean.Crime;
 import com.mi.www.criminalintent.database.CrimeDbSchema;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -60,6 +61,16 @@ public class CrimeLab {
     public  void addCrime(Crime crime){
         ContentValues contentValues = getContentValues(crime);
         mDatabase.insert(CrimeTable.NAME, null, contentValues);
+    }
+
+    /**
+     * 得到照片文件
+     * @param crime
+     * @return
+     */
+    public File getPhotoFile(Crime crime){
+        File filesDir = mContext.getFilesDir();
+        return new File(filesDir, crime.getPhotoFileName());
     }
 
     /**

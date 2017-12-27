@@ -19,6 +19,7 @@
     <string name="send_report">send report via:</string>
     <string name="crime_report">%1$s!
         The crime was discovered on %2$s. %3$s, and %4$s</string>
+    <string name="take_photo">take photo</string>
 
     <!--复数字符串，此方法在中文系统环境中不起作用-->
     <plurals name="subtitle_plural">
