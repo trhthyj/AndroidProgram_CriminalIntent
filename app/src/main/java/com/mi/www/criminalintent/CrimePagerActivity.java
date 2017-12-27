@@ -15,7 +15,7 @@ import com.mi.www.criminalintent.bean.CrimeLab;
 import java.util.List;
 import java.util.UUID;
 
-public class CrimePagerActivity extends AppCompatActivity {
+public class CrimePagerActivity extends AppCompatActivity implements CrimeFragment.CallBacks{
     public static final String EXTRA_CRIME_ID = "crime_id";
     private ViewPager mViewPager;
     private List<Crime> mList;
@@ -56,5 +56,10 @@ public class CrimePagerActivity extends AppCompatActivity {
                 break;
             }
         }
+    }
+
+    @Override
+    public void onCrimeUpdated(Crime crime) {
+
     }
 }

@@ -2,6 +2,7 @@ package com.mi.www.criminalintent;
 
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -62,6 +63,7 @@ public class CrimeFragment extends Fragment implements OnClickListener{
     private ImageView mIvCapture;
     private File mPhotoFile;
     private Intent mCaptureIntent;
+    private CallBacks mCallBacks;
 
     public static CrimeFragment newInstance(UUID id){
         Bundle bundle = new Bundle();
@@ -70,6 +72,17 @@ public class CrimeFragment extends Fragment implements OnClickListener{
         crimeFragment.setArguments(bundle);
         return crimeFragment;
     }
+
+    public interface CallBacks{
+        void onCrimeUpdated(Crime crime);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mCallBacks = (CallBacks) context;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -122,7 +135,7 @@ public class CrimeFragment extends Fragment implements OnClickListener{
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 mCrime.setTitle(charSequence.toString().trim());
-                CrimeLab.getCrimeLab(getActivity()).updateCrime(mCrime);
+                updateCrime();
             }
 
             @Override
@@ -134,7 +147,7 @@ public class CrimeFragment extends Fragment implements OnClickListener{
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 mCrime.setSolved(b);
-                CrimeLab.getCrimeLab(getActivity()).updateCrime(mCrime);
+                updateCrime();
             }
         });
         return view;
@@ -152,8 +165,8 @@ public class CrimeFragment extends Fragment implements OnClickListener{
                 datePickerDialogFragment.show(manager,TAG_DIALOG_DATE);
                 break;
             case R.id.btn_crime_delete:
-                CrimeLab.getCrimeLab(getActivity()).deleteCrime(mCrime);
-                getActivity().finish();
+//                CrimeLab.getCrimeLab(getActivity()).deleteCrime(mCrime);
+//                getActivity().finish();
                 break;
             case R.id.btn_choose_suspect:
                 pickContact();
@@ -207,7 +220,7 @@ public class CrimeFragment extends Fragment implements OnClickListener{
         if(requestCode == REQUEST_DATE){
             Date date = (Date) data.getSerializableExtra(DatePickerDialogFragment.EXTRA_DATE);
             mCrime.setDate(date);
-            CrimeLab.getCrimeLab(getActivity()).updateCrime(mCrime);
+            updateCrime();
             String dateString = DateFormat.format("yyyy年MM月dd日",mCrime.getDate()).toString();
             mBtnCrimeDate.setText(dateString);
         }else if(requestCode == REQUEST_CONTACT && data != null){
@@ -224,7 +237,7 @@ public class CrimeFragment extends Fragment implements OnClickListener{
                 String suspect = cursor.getString(0);
                 mCrime.setSuspect(suspect);
                 mBtnChooseSuspect.setText(suspect);
-                CrimeLab.getCrimeLab(getActivity()).updateCrime(mCrime);
+                updateCrime();
             }finally {
                 cursor.close();
             }
@@ -235,6 +248,12 @@ public class CrimeFragment extends Fragment implements OnClickListener{
             getActivity().revokeUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             updatePhotoView();
         }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallBacks = null;
     }
 
     /**
@@ -300,6 +319,11 @@ public class CrimeFragment extends Fragment implements OnClickListener{
         String report = getString(R.string.crime_report, mCrime.getTitle(), dateString,
                 solvedString, suspect);
         return report;
+    }
+
+    private void updateCrime(){
+        CrimeLab.getCrimeLab(getActivity()).updateCrime(mCrime);
+        mCallBacks.onCrimeUpdated(mCrime);
     }
 
 }
